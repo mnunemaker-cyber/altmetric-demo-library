@@ -1,0 +1,619 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Altmetric Demo Library</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --navy:      #1B3A5C;
+    --navy-mid:  #21446b;
+    --navy-card: #234b76;
+    --navy-hover:#285581;
+    --teal:      #00B4D8;
+    --teal-dim:  #0090ad;
+    --teal-glow: rgba(0,180,216,0.15);
+    --teal-soft: rgba(0,180,216,0.08);
+    --coral:     #F0563D;
+    --coral-soft:rgba(240,86,61,0.12);
+    --white:     #ffffff;
+    --off-white: #eaf4f8;
+    --muted:     #90b3c9;
+    --border:    rgba(0,180,216,0.18);
+    --tag-bg:    rgba(0,180,216,0.12);
+
+    /* tag type colours */
+    --col-industry: #00B4D8;
+    --col-skill:    #5bc4a0;
+    --col-workflow: #F0563D;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--navy);
+    color: var(--off-white);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ── background texture ── */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background:
+      radial-gradient(ellipse 80% 50% at 10% 0%, rgba(0,180,216,0.08) 0%, transparent 60%),
+      radial-gradient(ellipse 60% 40% at 90% 100%, rgba(240,86,61,0.06) 0%, transparent 60%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* donut-inspired ring watermark */
+  body::after {
+    content: '';
+    position: fixed;
+    top: -140px;
+    right: -140px;
+    width: 480px;
+    height: 480px;
+    background: conic-gradient(
+      from 0deg,
+      rgba(240,86,61,0.10) 0deg 60deg,
+      rgba(255,183,3,0.09) 60deg 130deg,
+      rgba(0,180,216,0.10) 130deg 220deg,
+      rgba(91,196,160,0.08) 220deg 300deg,
+      rgba(240,86,61,0.10) 300deg 360deg
+    );
+    border-radius: 50%;
+    -webkit-mask: radial-gradient(circle, transparent 58%, black 60%, black 72%, transparent 74%);
+    mask: radial-gradient(circle, transparent 58%, black 60%, black 72%, transparent 74%);
+    pointer-events: none;
+    z-index: 0;
+    opacity: 0.7;
+  }
+
+  /* ── header ── */
+  header {
+    position: relative;
+    z-index: 10;
+    padding: 28px 48px 0;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 24px;
+  }
+
+  .logo-wordmark {
+    font-family: 'Sora', sans-serif;
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: var(--white);
+    letter-spacing: -0.02em;
+  }
+
+  .header-sub {
+    margin-left: auto;
+    font-size: 0.78rem;
+    color: var(--muted);
+    font-weight: 300;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+
+  /* ── hero ── */
+  .hero {
+    position: relative;
+    z-index: 10;
+    padding: 56px 48px 40px;
+    max-width: 760px;
+  }
+
+  .hero h1 {
+    font-family: 'Sora', sans-serif;
+    font-size: clamp(1.8rem, 3.5vw, 2.6rem);
+    font-weight: 700;
+    line-height: 1.15;
+    color: var(--white);
+    letter-spacing: -0.03em;
+    margin-bottom: 14px;
+  }
+
+  .hero h1 em {
+    font-style: normal;
+    color: var(--coral);
+  }
+
+  .hero p {
+    font-size: 1rem;
+    color: var(--muted);
+    font-weight: 300;
+    line-height: 1.6;
+    max-width: 580px;
+  }
+
+  /* ── controls bar ── */
+  .controls {
+    position: relative;
+    z-index: 10;
+    padding: 0 48px 32px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  .search-wrap {
+    position: relative;
+    max-width: 480px;
+  }
+
+  .search-wrap svg {
+    position: absolute;
+    left: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--muted);
+    pointer-events: none;
+  }
+
+  #search {
+    width: 100%;
+    background: var(--navy-card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 11px 16px 11px 42px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.9rem;
+    color: var(--white);
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+
+  #search::placeholder { color: var(--muted); }
+
+  #search:focus {
+    border-color: var(--teal);
+    box-shadow: 0 0 0 3px var(--teal-glow);
+  }
+
+  .filter-groups {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 24px;
+    align-items: flex-start;
+  }
+
+  .filter-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .filter-group-label {
+    font-size: 0.68rem;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  .filter-pills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .pill {
+    padding: 5px 12px;
+    border-radius: 20px;
+    font-size: 0.78rem;
+    font-weight: 500;
+    cursor: pointer;
+    border: 1px solid transparent;
+    transition: all 0.15s ease;
+    user-select: none;
+    background: rgba(255,255,255,0.05);
+    color: var(--muted);
+    border-color: rgba(255,255,255,0.1);
+  }
+
+  .pill:hover {
+    background: var(--teal-soft);
+    border-color: var(--teal);
+    color: var(--teal);
+  }
+
+  /* active states per category */
+  .pill.active.industry  { background: rgba(0,180,216,0.18);  border-color: var(--col-industry); color: var(--col-industry); }
+  .pill.active.skill      { background: rgba(91,196,160,0.18); border-color: var(--col-skill);    color: var(--col-skill); }
+  .pill.active.workflow  { background: rgba(240,86,61,0.18);  border-color: var(--col-workflow); color: var(--col-workflow); }
+
+  .clear-btn {
+    align-self: flex-end;
+    background: none;
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 6px;
+    color: var(--muted);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.78rem;
+    padding: 5px 12px;
+    cursor: pointer;
+    transition: all 0.15s;
+    margin-left: auto;
+  }
+
+  .clear-btn:hover {
+    border-color: var(--teal);
+    color: var(--teal);
+  }
+
+  /* ── results count ── */
+  .results-bar {
+    position: relative;
+    z-index: 10;
+    padding: 0 48px 20px;
+    font-size: 0.82rem;
+    color: var(--muted);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .results-bar strong {
+    color: var(--teal);
+    font-weight: 600;
+  }
+
+  /* ── grid ── */
+  .grid-wrap {
+    position: relative;
+    z-index: 10;
+    padding: 0 40px 80px;
+  }
+
+  .demo-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 20px;
+  }
+
+  /* ── card ── */
+  .card {
+    background: var(--navy-card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 22px 22px 18px;
+    cursor: pointer;
+    text-decoration: none;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, var(--teal-soft) 0%, transparent 60%);
+    opacity: 0;
+    transition: opacity 0.25s ease;
+    border-radius: 12px;
+  }
+
+  .card:hover {
+    transform: translateY(-3px);
+    border-color: rgba(0,180,216,0.45);
+    box-shadow: 0 12px 40px rgba(27,58,92,0.5), 0 0 0 1px rgba(0,180,216,0.15);
+    background: var(--navy-hover);
+  }
+
+  .card:hover::before { opacity: 1; }
+
+  .card-section {
+    font-size: 0.67rem;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--teal-dim);
+    position: relative;
+    z-index: 1;
+  }
+
+  .card-title {
+    font-family: 'Sora', sans-serif;
+    font-size: 0.97rem;
+    font-weight: 600;
+    color: var(--white);
+    line-height: 1.35;
+    position: relative;
+    z-index: 1;
+  }
+
+  .card-blurb {
+    font-size: 0.82rem;
+    color: var(--muted);
+    line-height: 1.55;
+    flex: 1;
+    position: relative;
+    z-index: 1;
+  }
+
+  .card-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+    position: relative;
+    z-index: 1;
+    margin-top: 4px;
+  }
+
+  .ctag {
+    font-size: 0.68rem;
+    font-weight: 500;
+    padding: 3px 8px;
+    border-radius: 4px;
+    line-height: 1;
+  }
+
+  .ctag.industry  { background: rgba(0,180,216,0.14);  color: var(--col-industry); }
+  .ctag.skill      { background: rgba(91,196,160,0.14); color: var(--col-skill); }
+  .ctag.workflow  { background: rgba(240,86,61,0.14);  color: var(--col-workflow); }
+
+  .card-cta {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.78rem;
+    font-weight: 500;
+    color: var(--teal);
+    position: relative;
+    z-index: 1;
+    margin-top: 2px;
+    transition: gap 0.2s ease;
+  }
+
+  .card:hover .card-cta { gap: 10px; }
+
+  .card--pending {
+    opacity: 0.55;
+    cursor: default;
+    pointer-events: none;
+  }
+
+  .card-cta--pending {
+    color: var(--muted);
+    font-style: italic;
+    font-size: 0.75rem;
+  }
+
+  /* ── empty state ── */
+  .empty {
+    grid-column: 1 / -1;
+    text-align: center;
+    padding: 80px 20px;
+    color: var(--muted);
+  }
+
+  .empty svg { margin-bottom: 16px; opacity: 0.4; }
+  .empty h3 { font-family: 'Sora', sans-serif; font-size: 1.1rem; font-weight: 600; color: var(--off-white); margin-bottom: 8px; }
+  .empty p  { font-size: 0.88rem; }
+
+  /* ── card fade-in ── */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(12px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .card { animation: fadeUp 0.3s ease both; }
+
+  /* ── responsive ── */
+  @media (max-width: 700px) {
+    header, .hero, .controls, .results-bar, .grid-wrap { padding-left: 20px; padding-right: 20px; }
+    .filter-groups { gap: 16px; }
+    .demo-grid { grid-template-columns: 1fr; }
+    .header-sub { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<!-- header -->
+<header>
+  <span class="logo-wordmark">Altmetric Demo Library</span>
+  <span class="header-sub">Interactive product walkthroughs</span>
+</header>
+
+<!-- hero -->
+<div class="hero">
+  <h1>See the attention<br><em>behind the research</em></h1>
+  <p>Browse interactive walkthroughs of Altmetric Explorer, from your first look at the Details Page to building shareable dashboards. Filter by your role, experience level, or the workflow you want to explore.</p>
+</div>
+
+<!-- controls -->
+<div class="controls">
+  <div style="display:flex; align-items:center; gap:16px; flex-wrap:wrap;">
+    <div class="search-wrap">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+      </svg>
+      <input type="text" id="search" placeholder="Search demos…" autocomplete="off">
+    </div>
+    <button class="clear-btn" id="clearAll">Clear all filters</button>
+  </div>
+
+  <div class="filter-groups">
+    <div class="filter-group">
+      <span class="filter-group-label">Industry</span>
+      <div class="filter-pills" id="filter-industry"></div>
+    </div>
+
+    <div class="filter-group">
+      <span class="filter-group-label">Skill Level</span>
+      <div class="filter-pills" id="filter-skill"></div>
+    </div>
+
+    <div class="filter-group">
+      <span class="filter-group-label">Workflow</span>
+      <div class="filter-pills" id="filter-workflow"></div>
+    </div>
+  </div>
+</div>
+
+<!-- results count -->
+<div class="results-bar">
+  <strong id="count">0</strong> demos
+</div>
+
+<!-- grid -->
+<div class="grid-wrap">
+  <div class="demo-grid" id="grid"></div>
+</div>
+
+<script>
+const DEMOS = [
+  // Altmetric Explorer
+  { title: "Touring Altmetric Explorer", section: "Altmetric Explorer", blurb: "Welcomes users to Altmetric Explorer, describing it as a platform to browse and report on attention data for any piece of scholarly content.", url: "https://app.storylane.io/share/g4c7wnlhtg7s", industry: ["Academic","Corporate","GFN","Publisher"], skill: ["Beginner"], workflow: ["Getting Started"] },
+  { title: "The Altmetric Details Page", section: "Altmetric Explorer", blurb: "Explores the Altmetric Details Page, showing the granular attention data for a single piece of research across news, social, policy, and more.", url: "https://app.storylane.io/share/paldplnda1my", industry: ["Academic","Corporate","GFN","Publisher"], skill: ["Beginner"], workflow: ["Impact & Metrics"] },
+  { title: "Quick & advanced searching in Altmetric Explorer", section: "Altmetric Explorer", blurb: "Demonstrates how to use the Quick Search bar for fast answers and the Advanced Search panel for building highly targeted, complex queries.", url: "https://app.storylane.io/share/idv446fed3w2", industry: ["Academic","Corporate","GFN","Publisher"], skill: ["Beginner"], workflow: ["Discovery"] },
+  { title: "Interacting with the timeline", section: "Altmetric Explorer", blurb: "Shows how to follow spikes in attention on the Altmetric timeline to understand how a piece of research has been received over time.", url: "https://app.storylane.io/share/g24gzich84kp", industry: ["Academic","Corporate","GFN","Publisher"], skill: ["Intermediate"], workflow: ["Impact & Metrics"] },
+  { title: "Managing saved searches in Altmetric Explorer", section: "Altmetric Explorer", blurb: "Shows how to save complex queries, set up automated email alerts, and make the data work for you on an ongoing basis.", url: "https://app.storylane.io/share/xj1ru023ioko", industry: ["Academic","Corporate","GFN","Publisher"], skill: ["Intermediate"], workflow: ["Discovery","Impact & Metrics"] },
+  { title: "Altmetric Explorer shareable reports", section: "Altmetric Explorer", blurb: "Teaches how to turn saved searches into live, shareable dashboards that can be customised and shared with stakeholders.", url: "https://app.storylane.io/share/d7vimxakmusd", industry: ["Academic","Corporate","GFN","Publisher"], skill: ["Intermediate"], workflow: ["Impact & Metrics","Dashboards & Analytics"] },
+
+  // Note: any demo tagged Private in the source doc is intentionally excluded
+  // from this public array. The next full HTML Update Prompt run will keep
+  // this in sync automatically.
+];
+
+// ── canonical tag order (from the Storylane Demo Taxonomy) ──
+// A value only becomes a clickable pill if at least one demo in DEMOS
+// currently carries it. This keeps the filters honest automatically:
+// if every demo with a given tag goes Private (and gets excluded from
+// DEMOS) or is removed, its pill disappears on its own next load.
+const TAG_ORDER = {
+  industry: ["Academic", "Corporate", "GFN", "Publisher"],
+  skill: ["Beginner", "Intermediate", "Expert"],
+  workflow: ["Getting Started", "Discovery", "Impact & Metrics", "People & Organisations", "Dashboards & Analytics", "Reviewer Finder", "Research Security", "API"]
+};
+const WORKFLOW_LABELS = { "People & Organisations": "People & Orgs" };
+
+function escapeAttr(str) {
+  return str.replace(/&/g, '&amp;').replace(/"/g, '&quot;');
+}
+function escapeHtml(str) {
+  return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+function buildPills() {
+  ['industry', 'skill', 'workflow'].forEach(type => {
+    const present = new Set();
+    DEMOS.forEach(d => (d[type] || []).forEach(v => present.add(v)));
+    const container = document.getElementById('filter-' + type);
+    const values = TAG_ORDER[type].filter(v => present.has(v));
+    container.innerHTML = values.map(v => {
+      const label = (type === 'workflow' && WORKFLOW_LABELS[v]) ? WORKFLOW_LABELS[v] : v;
+      return `<button class="pill ${type}" data-type="${type}" data-value="${escapeAttr(v)}">${escapeHtml(label)}</button>`;
+    }).join('');
+  });
+  // (re)attach click handlers to whatever pills now exist
+  document.querySelectorAll('.pill').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const type = btn.dataset.type;
+      const val = btn.dataset.value;
+      if (active[type].has(val)) {
+        active[type].delete(val);
+        btn.classList.remove('active');
+      } else {
+        active[type].add(val);
+        btn.classList.add('active');
+      }
+      render();
+    });
+  });
+}
+
+// ── state ──
+const active = { industry: new Set(), skill: new Set(), workflow: new Set() };
+let query = '';
+
+// ── filter logic ──
+function matches(demo) {
+  // keyword
+  if (query) {
+    const q = query.toLowerCase();
+    if (!demo.title.toLowerCase().includes(q) && !demo.blurb.toLowerCase().includes(q) && !demo.section.toLowerCase().includes(q)) return false;
+  }
+  // industry (OR within type)
+  if (active.industry.size && !demo.industry.some(v => active.industry.has(v))) return false;
+  // skill (OR within type)
+  if (active.skill.size && !demo.skill.some(v => active.skill.has(v))) return false;
+  // workflow (OR within type)
+  if (active.workflow.size && !demo.workflow.some(v => active.workflow.has(v))) return false;
+  return true;
+}
+
+// ── render ──
+function render() {
+  const grid = document.getElementById('grid');
+  const filtered = DEMOS.filter(matches);
+  document.getElementById('count').textContent = filtered.length;
+
+  if (!filtered.length) {
+    grid.innerHTML = `
+      <div class="empty">
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <h3>No demos match</h3>
+        <p>Try adjusting your filters or clearing your search.</p>
+      </div>`;
+    return;
+  }
+
+  grid.innerHTML = filtered.map((d, i) => {
+    const industryTags = d.industry.map(t => `<span class="ctag industry">${t}</span>`).join('');
+    const skillTags    = d.skill.map(t =>    `<span class="ctag skill">${t}</span>`).join('');
+    const workflowTags = d.workflow.map(t =>  `<span class="ctag workflow">${t}</span>`).join('');
+    const cta = d.url
+      ? `<div class="card-cta">View demo <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></div>`
+      : `<div class="card-cta card-cta--pending">Coming soon</div>`;
+    const tag  = d.url ? 'a' : 'div';
+    const href = d.url ? `href="${d.url}" target="_blank" rel="noopener"` : '';
+    return `
+      <${tag} class="card${d.url ? '' : ' card--pending'}" ${href} style="animation-delay:${Math.min(i * 0.03, 0.4)}s">
+        <div class="card-section">${d.section}</div>
+        <div class="card-title">${d.title}</div>
+        <div class="card-blurb">${d.blurb}</div>
+        <div class="card-tags">${industryTags}${skillTags}${workflowTags}</div>
+        ${cta}
+      </${tag}>`;
+  }).join('');
+}
+
+// ── search ──
+document.getElementById('search').addEventListener('input', e => {
+  query = e.target.value.trim();
+  render();
+});
+
+// ── clear ──
+document.getElementById('clearAll').addEventListener('click', () => {
+  active.industry.clear(); active.skill.clear(); active.workflow.clear();
+  document.querySelectorAll('.pill.active').forEach(p => p.classList.remove('active'));
+  document.getElementById('search').value = '';
+  query = '';
+  render();
+});
+
+// ── init ──
+buildPills();
+render();
+</script>
+</body>
+</html>
