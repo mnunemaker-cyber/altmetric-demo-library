@@ -487,23 +487,20 @@ const DEMOS = [
   { title: "Interacting with the timeline", section: "Altmetric Explorer", blurb: "Shows how to follow spikes in attention on the Altmetric timeline to understand how a piece of research has been received over time.", url: "https://app.storylane.io/share/g24gzich84kp", industry: ["Academic","Corporate","GFN","Publisher"], skill: ["Intermediate"], workflow: ["Impact & Metrics"] },
   { title: "Managing saved searches in Altmetric Explorer", section: "Altmetric Explorer", blurb: "Shows how to save complex queries, set up automated email alerts, and make the data work for you on an ongoing basis.", url: "https://app.storylane.io/share/xj1ru023ioko", industry: ["Academic","Corporate","GFN","Publisher"], skill: ["Intermediate"], workflow: ["Discovery","Impact & Metrics"] },
   { title: "Altmetric Explorer shareable reports", section: "Altmetric Explorer", blurb: "Teaches how to turn saved searches into live, shareable dashboards that can be customised and shared with stakeholders.", url: "https://app.storylane.io/share/d7vimxakmusd", industry: ["Academic","Corporate","GFN","Publisher"], skill: ["Intermediate"], workflow: ["Impact & Metrics","Dashboards & Analytics"] },
-
-  // Note: any demo tagged Private in the source doc is intentionally excluded
-  // from this public array. The next full HTML Update Prompt run will keep
-  // this in sync automatically.
 ];
 
-// ── canonical tag order (from the Storylane Demo Taxonomy) ──
+// ── canonical tag order ──
 // A value only becomes a clickable pill if at least one demo in DEMOS
 // currently carries it. This keeps the filters honest automatically:
-// if every demo with a given tag goes Private (and gets excluded from
-// DEMOS) or is removed, its pill disappears on its own next load.
+// if a tag no longer applies to any visible demo, its pill disappears
+// on its own next load.
 const TAG_ORDER = {
   industry: ["Academic", "Corporate", "GFN", "Publisher"],
   skill: ["Beginner", "Intermediate", "Expert"],
   workflow: ["Getting Started", "Discovery", "Impact & Metrics", "People & Organisations", "Dashboards & Analytics", "Reviewer Finder", "Research Security", "API"]
 };
 const WORKFLOW_LABELS = { "People & Organisations": "People & Orgs" };
+const INDUSTRY_LABELS = { "GFN": "Government/Funder/Nonprofit" };
 
 function escapeAttr(str) {
   return str.replace(/&/g, '&amp;').replace(/"/g, '&quot;');
@@ -519,7 +516,9 @@ function buildPills() {
     const container = document.getElementById('filter-' + type);
     const values = TAG_ORDER[type].filter(v => present.has(v));
     container.innerHTML = values.map(v => {
-      const label = (type === 'workflow' && WORKFLOW_LABELS[v]) ? WORKFLOW_LABELS[v] : v;
+      const label = (type === 'workflow' && WORKFLOW_LABELS[v]) ? WORKFLOW_LABELS[v]
+        : (type === 'industry' && INDUSTRY_LABELS[v]) ? INDUSTRY_LABELS[v]
+        : v;
       return `<button class="pill ${type}" data-type="${type}" data-value="${escapeAttr(v)}">${escapeHtml(label)}</button>`;
     }).join('');
   });
@@ -577,7 +576,7 @@ function render() {
   }
 
   grid.innerHTML = filtered.map((d, i) => {
-    const industryTags = d.industry.map(t => `<span class="ctag industry">${t}</span>`).join('');
+    const industryTags = d.industry.map(t => `<span class="ctag industry">${INDUSTRY_LABELS[t] || t}</span>`).join('');
     const skillTags    = d.skill.map(t =>    `<span class="ctag skill">${t}</span>`).join('');
     const workflowTags = d.workflow.map(t =>  `<span class="ctag workflow">${t}</span>`).join('');
     const cta = d.url
